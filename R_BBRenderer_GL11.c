@@ -2,10 +2,12 @@
 
 #include "GL/glew.h"
 
-void BB_R_DrawViewport(const Vector3 position)
+void BB_R_DrawViewport(const Vector3 position, const float angleX, const float angleY)
 {
 	glLoadIdentity();
 	glTranslatef(position.X, position.Y, position.Z);
+	glRotatef(angleX, 0, 1, 0);
+	glRotatef(angleY, 1, 0, 0);
 	
 	BB_R_DrawXZGrid();
 }
