@@ -14,10 +14,25 @@ void BB_R_DrawViewport(const M_Vector3 position, const float angleX, const float
 
 void BB_R_DrawXZGrid()
 {
+	const unsigned iterations = 8;
+	const GLfloat verts[] = {
+		-1.0, -1.0,  1.0,
+		1.0, -1.0,  1.0,
+		-1.0,  1.0,  1.0,
+		1.0,  1.0,  1.0,
+		-1.0, -1.0, -1.0,
+		1.0, -1.0, -1.0,
+		-1.0,  1.0, -1.0,
+		1.0,  1.0, -1.0,
+	};
+	
 	glColor3f(1.0f, 1.0f, 1.0f);
 	glBegin(GL_TRIANGLES);
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(-1.0f, -1.0f, 0.0f);
-	glVertex3f(1.0f, -1.0f, 0.0f);
+
+	for(size_t index = 0; index < iterations * 3; index += 3)
+	{
+		glVertex3f(verts[index], verts[index + 1], verts[index + 2]);
+	}
+	
 	glEnd();
 }

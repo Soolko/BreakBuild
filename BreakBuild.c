@@ -7,8 +7,10 @@
 
 #include <SDL2/SDL_main.h>	// Main -> SDL_main
 
-inline M_Quaternion HandleLook();
-inline M_Vector3 HandleMovement(M_Vector3 position, M_Quaternion rotation);
+inline void HandleLook();
+inline M_Vector3 HandleMovement(M_Vector3 position);
+
+M_EulerAngles lookRotation;
 
 int main(int argc, char* argv[])
 {
@@ -35,12 +37,12 @@ int main(int argc, char* argv[])
 		C_PollInput();
 
 		// Get input
-		M_Quaternion viewportRotation = HandleLook();
-		viewportPosition = HandleMovement(viewportPosition, viewportRotation);
+		HandleLook();
+		viewportPosition = HandleMovement(viewportPosition);
 		
 		// Rendering
 		R_Clear();
-		BB_R_DrawViewport(viewportPosition, viewportRotation.X, viewportRotation.Y);
+		BB_R_DrawViewport(viewportPosition, M_ToDegrees(lookRotation.Yaw), M_ToDegrees(lookRotation.Pitch));
 		
 		C_SwapBuffer();
 	}
@@ -48,31 +50,32 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
-M_EulerAngles lookRotation;
 const float sensitivity = 0.01f;
 
-inline M_Quaternion HandleLook()
+inline void HandleLook()
 {
-	if(!C_MouseButtonDown(C_MouseButton_Right)) return M_EulerToQuaternion(lookRotation);
+	if(!C_MouseButtonDown(C_MouseButton_Right)) return;
 
 	const M_Vector2 delta = C_MouseDelta();
 
-	lookRotation.X += delta.X * sensitivity;
-	lookRotation.Y += delta.Y * sensitivity;
-	
-	printf("Rotation: (X: %f, Y: %f, Z: %f)\n", lookRotation.X, lookRotation.Y, lookRotation.Z);
-	return M_EulerToQuaternion(lookRotation);
+	lookRotation.Yaw += delta.X * sensitivity;
+	lookRotation.Pitch += delta.Y * sensitivity;
 }
 
-inline M_Vector3 HandleMovement(M_Vector3 position, M_Quaternion rotation)
+inline M_Vector3 HandleMovement(M_Vector3 position)
 {
 	const float speed = 0.1f;
 
-	M_Vector2 inputVector = M_GenVector2(0.0f, 0.0f);
-	if(C_KeyDown(C_Key_A)) inputVector.X -= speed;
-	if(C_KeyDown(C_Key_D)) inputVector.X += speed;
-	if(C_KeyDown(C_Key_W)) inputVector.Y += speed;
-	if(C_KeyDown(C_Key_S)) inputVector.Y -= speed;
+	M_Vector3 inputVector = M_GenVector3(0.0f, 0.0f, 0.0f);
+	if(C_KeyDown(C_Key_A)) inputVector.X += speed;
+	if(C_KeyDown(C_Key_D)) inputVector.X -= speed;
+	if(C_KeyDown(C_Key_W)) inputVector.Z += speed;
+	if(C_KeyDown(C_Key_S)) inputVector.Z -= speed;
+
+	M_Vector3 rotated = M_Vector3_Rotate(inputVector, M_EulerToQuaternion(lookRotation));
+	M_Vector3 up = rotated;
+	rotated.Y = 0.0f;
+	position = M_AddVector3(position, rotated);
 	
 	return position;
 }
