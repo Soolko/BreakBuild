@@ -5,10 +5,10 @@
 
 #include "R_BBRenderer.h"
 
-#include <SDL2/SDL.h>	// Main -> SDL_main
+#include <SDL2/SDL_main.h>	// Main -> SDL_main
 
-inline Vector2 HandleLook(Vector2 rotation);
-inline Vector3 HandleMovement(Vector3 position, Vector2 rotation);
+inline M_Quaternion HandleLook();
+inline M_Vector3 HandleMovement(M_Vector3 position, M_Quaternion rotation);
 
 int main(int argc, char* argv[])
 {
@@ -28,15 +28,14 @@ int main(int argc, char* argv[])
 	}
 
 	// Do stuff here
-	Vector2 viewportRotation = M_GenVector2(0.0f, 0.0f);
-	Vector3 viewportPosition = M_GenVector3(0.0f, 0.0f, -10.0f);
+	M_Vector3 viewportPosition = M_GenVector3(0.0f, 0.0f, -10.0f);
 	while(C_Poll() /* Poll Window* */)
 	{
 		// Input
 		C_PollInput();
 
 		// Get input
-		viewportRotation = HandleLook(viewportRotation);
+		M_Quaternion viewportRotation = HandleLook();
 		viewportPosition = HandleMovement(viewportPosition, viewportRotation);
 		
 		// Rendering
@@ -49,34 +48,31 @@ int main(int argc, char* argv[])
 	return EXIT_SUCCESS;
 }
 
-inline Vector2 HandleLook(Vector2 rotation)
-{
-	if(!C_MouseButtonDown(C_MouseButton_Right)) return rotation;
+M_EulerAngles lookRotation;
+const float sensitivity = 0.01f;
 
-	const Vector2 delta = C_MouseDelta();
-	printf("Mouse Delta: (%f, %f)\n", delta.X, delta.Y);
-	rotation.X += delta.X;
-	rotation.Y += delta.Y;
+inline M_Quaternion HandleLook()
+{
+	if(!C_MouseButtonDown(C_MouseButton_Right)) return M_EulerToQuaternion(lookRotation);
+
+	const M_Vector2 delta = C_MouseDelta();
+
+	lookRotation.X += delta.X * sensitivity;
+	lookRotation.Y += delta.Y * sensitivity;
 	
-	return rotation;
+	printf("Rotation: (X: %f, Y: %f, Z: %f)\n", lookRotation.X, lookRotation.Y, lookRotation.Z);
+	return M_EulerToQuaternion(lookRotation);
 }
 
-inline Vector3 HandleMovement(Vector3 position, Vector2 rotation)
+inline M_Vector3 HandleMovement(M_Vector3 position, M_Quaternion rotation)
 {
 	const float speed = 0.1f;
 
-	Vector2 inputVector = M_GenVector2(0.0f, 0.0f);
+	M_Vector2 inputVector = M_GenVector2(0.0f, 0.0f);
 	if(C_KeyDown(C_Key_A)) inputVector.X -= speed;
 	if(C_KeyDown(C_Key_D)) inputVector.X += speed;
 	if(C_KeyDown(C_Key_W)) inputVector.Y += speed;
 	if(C_KeyDown(C_Key_S)) inputVector.Y -= speed;
-
-	const float horizontal = M_cos(rotation.Y) * inputVector.Y;
-	position.X += M_cos(rotation.X) * horizontal;
-	position.Z -= M_sin(rotation.X) * horizontal;
-	
-	position.X -= M_sin(rotation.X) * inputVector.X;
-	position.Z += M_cos(rotation.X) * inputVector.X;
 	
 	return position;
 }

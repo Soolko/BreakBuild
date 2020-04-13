@@ -3,7 +3,7 @@
 
 #include "Breakout/Maths.h"
 
-void BB_R_DrawViewport(Vector3 position, float angleX, float angleY);
+void BB_R_DrawViewport(M_Vector3 position, float angleX, float angleY);
 void BB_R_DrawXZGrid();
 
 #endif
